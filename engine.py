@@ -62,6 +62,9 @@ class SGlangEngine:
             "SAMPLING_BACKEND": "--sampling-backend",
             "TOOL_CALL_PARSER": "--tool-call-parser",
             "REASONING_PARSER": "--reasoning-parser",
+            "EXPERT_PARALLEL_SIZE": "--expert-parallel-size",
+            "KV_CACHE_DTYPE": "--kv-cache-dtype",
+            "CUDA_GRAPH_MAX_BS": "--cuda-graph-max-bs",
         }
 
         # Boolean flags
@@ -77,6 +80,10 @@ class SGlangEngine:
             "ENABLE_P2P_CHECK",
             "ENABLE_FLASHINFER_MLA",
             "TRITON_ATTENTION_REDUCE_IN_FP32",
+            "ENABLE_MLA",
+            "ENABLE_EP_MOE",
+            "ENABLE_OVERLAP_SCHEDULE",
+            "CHUNKED_PREFILL",
         ]
 
         # Add options from environment variables only if they are set
@@ -90,6 +97,7 @@ class SGlangEngine:
             if os.getenv(flag, "").lower() in ("true", "1", "yes"):
                 command.append(f"--{flag.lower().replace('_', '-')}")
 
+        print(f"Starting SGLang server with command: {' '.join(command)}")
         self.process = subprocess.Popen(command, stdout=None, stderr=None)
         print(f"Server started with PID: {self.process.pid}")
 

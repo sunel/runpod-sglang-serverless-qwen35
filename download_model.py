@@ -6,8 +6,8 @@ from shutil import rmtree
 from huggingface_hub import snapshot_download
 
 BASE_DIR = "/"
-TOKENIZER_PATTERNS = [["*.json", "tokenizer*"]]
-MODEL_PATTERNS = [["*.safetensors"], ["*.bin"], ["*.pt"]]
+TOKENIZER_PATTERNS = [["*.json", "tokenizer*", "*.py"]]
+MODEL_PATTERNS = [["*.safetensors", "*.json", "*.py"], ["*.bin", "*.json", "*.py"], ["*.pt", "*.json", "*.py"]]
 
 
 def setup_env():

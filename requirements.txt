@@ -3,3 +3,6 @@ pandas
 pyarrow
 runpod>=1.8,<2.0
 pydantic-settings
+openai
+aiohttp
+requests

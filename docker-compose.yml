@@ -14,21 +14,32 @@ services:
     environment:
       - HOST=0.0.0.0
       - PORT=30000
-      - MODEL_NAME=meta-llama/Llama-3.2-1B-Instruct
+      - MODEL_NAME=Jackrong/Qwen3.5-35B-A3B-Claude-4.6-Opus-Reasoning-Distilled
       - TRUST_REMOTE_CODE=true
+      - HF_TOKEN=${HF_TOKEN}
+      - HF_HUB_ENABLE_HF_TRANSFER=1
+
+      # --- Performance tuning for L40S (48GB VRAM) ---
+      # BF16 is the native dtype for Qwen3.5; L40S supports BF16 natively
+      - DTYPE=bfloat16
+      # Use FlashInfer for attention & sampling — best perf on Ampere/Ada GPUs
       - ATTENTION_BACKEND=flashinfer
       - SAMPLING_BACKEND=flashinfer
-      - TOOL_CALL_PARSER=llama3
-      # - REASONING_PARSER=llama3
-      - HF_TOKEN=${HF_TOKEN}
-
-      # make it work locally with <= 8 GB VRAM
-      - MEM_FRACTION_STATIC=0.5
-      - CHUNKED_PREFILL_SIZE=512
-      - MAX_PREFILL_TOKENS=2048
-      - MAX_TOTAL_TOKENS=2048
-      - DISABLE_CUDA_GRAPH=true
-      - CONTEXT_LENGTH=2048
+      # Single L40S can hold 35B MoE (only ~3B active params per token)
+      - TENSOR_PARALLEL_SIZE=1
+      # Allocate 90% of VRAM to KV-cache for maximum throughput
+      - MEM_FRACTION_STATIC=0.90
+      # Model was trained with 8192 context; match it for best quality
+      - CONTEXT_LENGTH=8192
+      # Enable chunked prefill for better scheduling with long prompts
+      - CHUNKED_PREFILL_SIZE=8192
+      - MAX_PREFILL_TOKENS=16384
+      # Limit cuda graph batch sizes to save memory on MoE routing
+      - CUDA_GRAPH_MAX_BS=32
+      # Schedule policy — optimise for low-latency first-token
+      - SCHEDULE_POLICY=lpm
+      # Log level
+      - LOG_LEVEL=info
 
     ports:
       - "8000:8000"
