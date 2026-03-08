@@ -1,7 +1,15 @@
-FROM lmsysorg/sglang:nightly-dev-20260308-d28f3524
+# Use stable CUDA 12.6 image as base to guarantee driver compatibility across
+# RunPod hosts. Then upgrade SGLang from main branch to get Qwen3.5 MoE support
+# (merged in sglang PR#18489). The #subdirectory=python suffix is required
+# because sglang is a monorepo and pyproject.toml lives under python/.
+FROM lmsysorg/sglang:v0.5.3rc1-cu126
+
+# Upgrade SGLang to main branch (Qwen3.5 MoE support, hybrid attention, etc.)
+RUN pip install --no-cache-dir --upgrade \
+    'git+https://github.com/sgl-project/sglang.git#subdirectory=python'
 
 # Install additional ML dependencies
-# (transformers, sentencepiece, tiktoken are already bundled in the nightly image)
+# (transformers, sentencepiece, tiktoken are already in the base image)
 RUN pip install --no-cache-dir \
     accelerate \
     huggingface_hub \
@@ -40,8 +48,8 @@ ENV MODEL_NAME=$MODEL_NAME \
     TRUST_REMOTE_CODE=true \
     # Use bfloat16 by default — native dtype for Qwen3.5 and optimal on L40S
     DTYPE=bfloat16 \
-    # CUDA memory tuning
-    PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
+    # CUDA memory tuning (PYTORCH_CUDA_ALLOC_CONF was deprecated, use PYTORCH_ALLOC_CONF)
+    PYTORCH_ALLOC_CONF=expandable_segments:True \
     # NCCL tuning for multi-GPU
     NCCL_P2P_DISABLE=0 \
     NCCL_IB_DISABLE=0
