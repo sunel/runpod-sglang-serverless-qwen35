@@ -1,30 +1,6 @@
-FROM nvidia/cuda:12.6.3-devel-ubuntu22.04
+FROM lmsysorg/sglang:latest
 
-# Prevent interactive prompts during package installation
-ENV DEBIAN_FRONTEND=noninteractive
-
-# Install system dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    python3 python3-pip python3-dev \
-    git curl wget \
-    build-essential \
-    && rm -rf /var/lib/apt/lists/*
-
-# Make python3 the default python
-RUN ln -sf /usr/bin/python3 /usr/bin/python
-
-# Upgrade pip
-RUN pip install --no-cache-dir --upgrade pip setuptools wheel
-
-# Install PyTorch with CUDA 12.6 support
-RUN pip install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu126
-
-# Install the latest SGLang from GitHub (includes qwen3_5_moe support)
-# SGLang is a monorepo — the Python package lives in the python/ subdirectory
-RUN pip install --no-cache-dir "sglang[all]" \
-    --find-links https://flashinfer.ai/whl/cu126/torch2.10/flashinfer-python
-
-# Install the latest Transformers from GitHub (includes Qwen3.5 MoE support)
+# Install the latest Transformers from GitHub (includes Qwen3.5 MoE model type)
 RUN pip install --no-cache-dir git+https://github.com/huggingface/transformers
 
 # Install additional ML dependencies
