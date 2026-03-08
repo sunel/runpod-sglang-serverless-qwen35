@@ -1,29 +1,19 @@
-FROM lmsysorg/sglang:latest
-
-# Install the latest Transformers from GitHub (includes Qwen3.5 MoE model type)
-RUN pip install --no-cache-dir git+https://github.com/huggingface/transformers
+FROM lmsysorg/sglang:nightly-dev-20260308-d28f3524
 
 # Install additional ML dependencies
+# (transformers, sentencepiece, tiktoken are already bundled in the nightly image)
 RUN pip install --no-cache-dir \
     accelerate \
     huggingface_hub \
     hf_transfer \
-    sentencepiece \
-    tiktoken \
     protobuf
-
-# Install uv package manager
-RUN curl -Ls https://astral.sh/uv/install.sh | sh \
-    && ln -sf /root/.local/bin/uv /usr/local/bin/uv
-ENV PATH="/root/.local/bin:${PATH}"
 
 # Set working directory
 WORKDIR /sgl-workspace
 
 # Install worker dependencies
 COPY requirements.txt ./
-RUN --mount=type=cache,target=/root/.cache/uv \
-    uv pip install --system -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy source files
 COPY handler.py engine.py utils.py download_model.py test_input.json ./
