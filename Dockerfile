@@ -20,7 +20,9 @@ RUN pip install --no-cache-dir --upgrade pip setuptools wheel
 RUN pip install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu126
 
 # Install the latest SGLang from GitHub (includes qwen3_5_moe support)
-RUN pip install --no-cache-dir "sglang[all] @ git+https://github.com/sgl-project/sglang.git"
+# SGLang is a monorepo — the Python package lives in the python/ subdirectory
+RUN pip install --no-cache-dir "sglang[all]" \
+    --find-links https://flashinfer.ai/whl/cu126/torch2.10/flashinfer-python
 
 # Install the latest Transformers from GitHub (includes Qwen3.5 MoE support)
 RUN pip install --no-cache-dir git+https://github.com/huggingface/transformers
