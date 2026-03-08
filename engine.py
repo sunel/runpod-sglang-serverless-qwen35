@@ -65,6 +65,8 @@ class SGlangEngine:
             "EXPERT_PARALLEL_SIZE": "--expert-parallel-size",
             "KV_CACHE_DTYPE": "--kv-cache-dtype",
             "CUDA_GRAPH_MAX_BS": "--cuda-graph-max-bs",
+            "MAMBA_SSM_DTYPE": "--mamba-ssm-dtype",
+            "MAX_MAMBA_CACHE_SIZE": "--max-mamba-cache-size",
         }
 
         # Boolean flags

@@ -32,12 +32,19 @@ services:
       # Model was trained with 8192 context; match it for best quality
       - CONTEXT_LENGTH=8192
       # Enable chunked prefill for better scheduling with long prompts
-      - CHUNKED_PREFILL_SIZE=8192
+      # Qwen3.5 PR recommends 2048 for the hybrid Mamba/attention architecture
+      - CHUNKED_PREFILL_SIZE=2048
       - MAX_PREFILL_TOKENS=16384
       # Limit cuda graph batch sizes to save memory on MoE routing
       - CUDA_GRAPH_MAX_BS=32
       # Schedule policy — optimise for low-latency first-token
       - SCHEDULE_POLICY=lpm
+      # Mamba SSM dtype — required for Qwen3.5 hybrid linear attention layers
+      - MAMBA_SSM_DTYPE=bfloat16
+      # Mamba cache size (number of sequences cached for Mamba state)
+      - MAX_MAMBA_CACHE_SIZE=128
+      # Tool call parser for Qwen3.5 function-calling support
+      - TOOL_CALL_PARSER=qwen3_coder
       # Log level
       - LOG_LEVEL=info
 
