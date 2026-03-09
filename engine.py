@@ -1,10 +1,41 @@
 import subprocess
 import time
+import json
 import requests
 import openai
 import asyncio
 import aiohttp
 import os
+from pathlib import Path
+
+
+def patch_tokenizer_config(model_path):
+    """Patch tokenizer_config.json to fix unsupported tokenizer_class values.
+
+    Some newer models set tokenizer_class to "TokenizersBackend" which requires
+    transformers>=5.0. Replace with "PreTrainedTokenizerFast" which is functionally
+    equivalent and works with transformers 4.x.
+    """
+    if not model_path:
+        return
+
+    # Resolve HF cache symlinks to find the actual snapshot directory
+    model_dir = Path(model_path)
+    if not model_dir.is_dir():
+        return
+
+    config_path = model_dir / "tokenizer_config.json"
+    if not config_path.is_file():
+        return
+
+    try:
+        config = json.loads(config_path.read_text())
+        if config.get("tokenizer_class") == "TokenizersBackend":
+            config["tokenizer_class"] = "PreTrainedTokenizerFast"
+            config_path.write_text(json.dumps(config, indent=2, ensure_ascii=False))
+            print(f"Patched tokenizer_config.json: TokenizersBackend -> PreTrainedTokenizerFast")
+    except Exception as e:
+        print(f"Warning: failed to patch tokenizer_config.json: {e}")
 
 
 class SGlangEngine:
@@ -97,6 +128,9 @@ class SGlangEngine:
         for flag in boolean_flags:
             if os.getenv(flag, "").lower() in ("true", "1", "yes"):
                 command.append(f"--{flag.lower().replace('_', '-')}")
+
+        # Patch tokenizer_config.json if needed (fixes TokenizersBackend error)
+        patch_tokenizer_config(self.model)
 
         print(f"Starting SGLang server with command: {' '.join(command)}")
         self.process = subprocess.Popen(command, stdout=None, stderr=None)
