@@ -33,8 +33,9 @@ print('Patched' if patched != txt else 'Already patched') \
 RUN pip install --no-cache-dir nvidia-cudnn-cu12==9.16.0.29
 
 # Install additional ML dependencies
-# (transformers, sentencepiece, tiktoken are already in the base image)
+# Upgrade transformers to support newer tokenizer formats (e.g. TokenizersBackend)
 RUN pip install --no-cache-dir \
+    'transformers>=4.52' \
     accelerate \
     huggingface_hub \
     hf_transfer \
