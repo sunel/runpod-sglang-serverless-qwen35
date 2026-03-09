@@ -77,6 +77,7 @@ class SGlangEngine:
             "SHOW_TIME_COST",
             "DISABLE_RADIX_CACHE",
             "DISABLE_CUDA_GRAPH",
+            "DISABLE_PIECEWISE_CUDA_GRAPH",
             "DISABLE_OUTLINES_DISK_CACHE",
             "ENABLE_TORCH_COMPILE",
             "ENABLE_P2P_CHECK",
