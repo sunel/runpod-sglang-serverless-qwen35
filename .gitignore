@@ -1,3 +1,16 @@
 !*.png
 .env
 .DS_Store
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.log
+*.sqlite3
+*.db
+*.bak
+*.swp
+*.swo
+.idea/
+.vscode/

@@ -27,6 +27,24 @@ open(fp, 'w').write(patched); \
 print('Patched' if patched != txt else 'Already patched') \
 "
 
+# Patch transformers to handle "TokenizersBackend" tokenizer class from newer models.
+# Models saved with transformers>=5.0 set tokenizer_class="TokenizersBackend" in
+# tokenizer_config.json, but transformers 4.x doesn't recognize it.
+# Fix: add TokenizersBackend as an alias for PreTrainedTokenizerFast in the
+# tokenizer_class_from_name() function in tokenization_auto.py.
+RUN python3 -c "\
+import inspect; \
+import transformers.models.auto.tokenization_auto as ta; \
+fp = inspect.getfile(ta); \
+txt = open(fp).read(); \
+old = 'if class_name == \"PreTrainedTokenizerFast\":'; \
+new = 'if class_name in (\"PreTrainedTokenizerFast\", \"TokenizersBackend\"):'; \
+assert old in txt, f'Patch target not found in {fp}'; \
+patched = txt.replace(old, new, 1); \
+open(fp, 'w').write(patched); \
+print('Patched tokenizer_class_from_name: TokenizersBackend -> PreTrainedTokenizerFast') \
+"
+
 # PyTorch 2.9.1 (pulled in by SGLang main) has a known bug with CuDNN < 9.15.
 # Install the required CuDNN version as recommended by SGLang's own check.
 # Reference: https://github.com/pytorch/pytorch/issues/168167
