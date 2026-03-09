@@ -16,29 +16,16 @@ RUN pip install --no-cache-dir --upgrade \
 # mechanism already used for Gemma3/Llama4/Step3VL.
 # Root cause confirmed in: sglang/srt/configs/model_config.py (mm_disabled_models)
 #                          sglang/srt/managers/tokenizer_manager.py (_get_processor_wrapper)
-RUN python3 - << 'PATCH'
-import inspect
-import sglang.srt.configs.model_config as mc
-
-filepath = inspect.getfile(mc)
-with open(filepath, "r") as f:
-    content = f.read()
-
-old_snippet = '"Gemma3ForConditionalGeneration",'
-new_snippet = (
-    '"Gemma3ForConditionalGeneration",\n'
-    '                "Qwen3_5MoeForConditionalGeneration",\n'
-    '                "Qwen3_5ForConditionalGeneration",'
-)
-
-if "Qwen3_5MoeForConditionalGeneration" not in content.split("mm_disabled_models")[1].split("]")[0]:
-    content = content.replace(old_snippet, new_snippet, 1)
-    with open(filepath, "w") as f:
-        f.write(content)
-    print(f"Patched {filepath}: added Qwen3_5MoeForConditionalGeneration to mm_disabled_models")
-else:
-    print("Already patched, skipping")
-PATCH
+RUN python3 -c "\
+import inspect, sglang.srt.configs.model_config as mc; \
+fp = inspect.getfile(mc); \
+txt = open(fp).read(); \
+old = '\"Gemma3ForConditionalGeneration\",'; \
+new = '\"Gemma3ForConditionalGeneration\",\n                \"Qwen3_5MoeForConditionalGeneration\",\n                \"Qwen3_5ForConditionalGeneration\",'; \
+patched = txt.replace(old, new, 1) if 'Qwen3_5MoeForConditionalGeneration' not in txt.split('mm_disabled_models')[1].split(']')[0] else txt; \
+open(fp, 'w').write(patched); \
+print('Patched' if patched != txt else 'Already patched') \
+"
 
 # PyTorch 2.9.1 (pulled in by SGLang main) has a known bug with CuDNN < 9.15.
 # Install the required CuDNN version as recommended by SGLang's own check.
