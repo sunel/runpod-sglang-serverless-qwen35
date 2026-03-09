@@ -84,7 +84,6 @@ class SGlangEngine:
             "TRITON_ATTENTION_REDUCE_IN_FP32",
             "ENABLE_MLA",
             "ENABLE_EP_MOE",
-            "ENABLE_OVERLAP_SCHEDULE",
             "CHUNKED_PREFILL",
         ]
 

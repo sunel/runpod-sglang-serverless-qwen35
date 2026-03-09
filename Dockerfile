@@ -8,6 +8,11 @@ FROM lmsysorg/sglang:v0.5.3rc1-cu126
 RUN pip install --no-cache-dir --upgrade \
     'git+https://github.com/sgl-project/sglang.git#subdirectory=python'
 
+# PyTorch 2.9.1 (pulled in by SGLang main) has a known bug with CuDNN < 9.15.
+# Install the required CuDNN version as recommended by SGLang's own check.
+# Reference: https://github.com/pytorch/pytorch/issues/168167
+RUN pip install --no-cache-dir nvidia-cudnn-cu12==9.16.0.29
+
 # Install additional ML dependencies
 # (transformers, sentencepiece, tiktoken are already in the base image)
 RUN pip install --no-cache-dir \
@@ -46,6 +51,8 @@ ENV MODEL_NAME=$MODEL_NAME \
     HF_HOME="${BASE_PATH}/huggingface-cache/hub" \
     HF_HUB_ENABLE_HF_TRANSFER=1 \
     TRUST_REMOTE_CODE=true \
+    # Silence the PyTorch 2.9.1/CuDNN compatibility check — we install 9.16.0.29 above
+    SGLANG_DISABLE_CUDNN_CHECK=1 \
     # Use bfloat16 by default — native dtype for Qwen3.5 and optimal on L40S
     DTYPE=bfloat16 \
     # CUDA memory tuning (PYTORCH_CUDA_ALLOC_CONF was deprecated, use PYTORCH_ALLOC_CONF)
