@@ -8,6 +8,38 @@ FROM lmsysorg/sglang:v0.5.3rc1-cu126
 RUN pip install --no-cache-dir --upgrade \
     'git+https://github.com/sgl-project/sglang.git#subdirectory=python'
 
+# Patch SGLang model_config.py to treat Qwen3.5 text-only distilled models as
+# non-multimodal. Qwen3_5MoeForConditionalGeneration is in SGLang's
+# multimodal_model_archs list, so SGLang calls AutoProcessor.from_pretrained()
+# for ALL models with this architecture — even text-only distilled variants that
+# have no processor_config.json. The fix mirrors the existing mm_disabled_models
+# mechanism already used for Gemma3/Llama4/Step3VL.
+# Root cause confirmed in: sglang/srt/configs/model_config.py (mm_disabled_models)
+#                          sglang/srt/managers/tokenizer_manager.py (_get_processor_wrapper)
+RUN python3 - << 'PATCH'
+import inspect
+import sglang.srt.configs.model_config as mc
+
+filepath = inspect.getfile(mc)
+with open(filepath, "r") as f:
+    content = f.read()
+
+old_snippet = '"Gemma3ForConditionalGeneration",'
+new_snippet = (
+    '"Gemma3ForConditionalGeneration",\n'
+    '                "Qwen3_5MoeForConditionalGeneration",\n'
+    '                "Qwen3_5ForConditionalGeneration",'
+)
+
+if "Qwen3_5MoeForConditionalGeneration" not in content.split("mm_disabled_models")[1].split("]")[0]:
+    content = content.replace(old_snippet, new_snippet, 1)
+    with open(filepath, "w") as f:
+        f.write(content)
+    print(f"Patched {filepath}: added Qwen3_5MoeForConditionalGeneration to mm_disabled_models")
+else:
+    print("Already patched, skipping")
+PATCH
+
 # PyTorch 2.9.1 (pulled in by SGLang main) has a known bug with CuDNN < 9.15.
 # Install the required CuDNN version as recommended by SGLang's own check.
 # Reference: https://github.com/pytorch/pytorch/issues/168167
