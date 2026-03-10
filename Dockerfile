@@ -107,4 +107,14 @@ RUN --mount=type=secret,id=HF_TOKEN,required=false \
         python3 download_model.py; \
     fi
 
+# Generate optimized MoE kernel configs at build time if model is baked in.
+# SGLang warns "Performance might be sub-optimal!" without these tuned configs.
+# This creates device-specific Triton kernel configs for the MoE layers.
+ARG TUNE_MOE_KERNELS=""
+RUN if [ -n "$TUNE_MOE_KERNELS" ] && [ -n "$MODEL_NAME" ]; then \
+        python3 -m sglang.srt.layers.moe.fused_moe_triton.benchmark_moe_configs \
+            --model "$MODEL_NAME" --tp-size 1 --dtype bfloat16 2>/dev/null || \
+        echo "MoE kernel tuning skipped (model may not be available at build time)"; \
+    fi
+
 CMD ["python3", "handler.py"]
