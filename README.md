@@ -54,6 +54,20 @@ All behaviour is controlled through environment variables:
 | `TOOL_CALL_PARSER`                | Defines the parser used to interpret responses    |                                       | "llama3", "llama4", "mistral", "qwen25", "deepseekv3"                                     |
 | `REASONING_PARSER`                | Defines the parser used for reasoning traces      |                                       | "llama3", "llama4", "mistral", "qwen25", "deepseekv3"                                     |
 
+## Recommended Settings for Qwen3.5-35B-A3B (H100 80GB)
+
+If you are deploying **Jackrong/Qwen3.5-35B-A3B-Claude-4.6-Opus-Reasoning-Distilled** on a single H100 80GB, use these env vars:
+
+| Environment Variable           | Value         | Why                                                    |
+| ------------------------------ | ------------- | ------------------------------------------------------ |
+| `MODEL_NAME`          | `jackrong/qwen3.5-35b-a3b-claude-4.6-opus-reasoning-distilled`        | Model uses 65.5GB; higher fraction gives more KV cache |
+| `MEM_FRACTION_STATIC`          | `0.92`        | Model uses 65.5GB; higher fraction gives more KV cache |
+| `CUDA_GRAPH_MAX_BS`            | `32`          | Reduces CUDA graph memory overhead                     |
+| `DISABLE_PIECEWISE_CUDA_GRAPH` | `true`        | Incompatible with Qwen3.5 MRoPE + hybrid Mamba         |
+| `QUANTIZATION`                 | `fp8`         | H100 native FP8 — up to 2x throughput                  |
+| `ATTENTION_BACKEND`            | `flashinfer`  | Faster decode than FA3 on H100                         |
+| `CONTEXT_LENGTH`               | `8192`        | Limits memory usage; increase if longer context needed  |
+
 ## Tool/Function Calling and Reasoning
 
 - **Tool/Function calling**: Set the `TOOL_CALL_PARSER` environment variable to match your model family. Supported values: `llama3`, `llama4`, `mistral`, `qwen25`, `deepseekv3`. If unset, this worker does not pass `--tool-call-parser` to SGLang.
